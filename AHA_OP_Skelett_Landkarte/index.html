@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>OP-Pflege Skelett-Landkarte –  Standard</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 18px; background:#fafafa; color:#1a1a1a; }
+  .wrap { max-width: 1800px; margin: 0 auto; }
+  .top { display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+  .card { background:#fff; border:1px solid #e6e6e6; border-radius:16px; padding:14px; box-shadow: 0 1px 0 rgba(0,0,0,0.03); }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  .meta { font-size: 13px; color:#444; line-height:1.35; }
+  .grid { display:grid; grid-template-columns: 2fr 0.6fr; gap: 10px; margin-top: 8px; }
+  @media (max-width: 980px) { .grid { display:grid; grid-template-columns: 2fr 0.6fr; gap: 10px; margin-top: 8px; } }
+  svg { width: 100%; height: auto; display:block; border-radius: 12px; background:#fff; }
+  .hotspot { fill: rgba(0,0,0,0); stroke: rgba(255,0,0,0.0); stroke-width: 4; cursor: pointer; }
+  .hotspot:hover, .hotspot:focus { fill: rgba(220,0,0,0.55); stroke: rgba(180,0,0,0.95); stroke-width: 5; }
+  .tooltip { position: fixed; padding: 8px 10px; background: rgba(20,20,20,0.92); color: #fff; border-radius: 10px; font-size: 14px;
+            pointer-events: none; opacity: 0; transform: translate(10px, 10px); transition: opacity 80ms ease; z-index: 9999; max-width: 360px; line-height: 1.25; }
+  .tooltip.show { opacity: 1; }
+  .btn { display:inline-block; padding:10px 12px; border-radius:12px; border:1px solid #ddd; background:#fff; cursor:pointer; font-size:14px; }
+  .btn:hover { background:#f5f5f5; }
+  .list a { display:block; padding:8px 10px; border-radius:12px; border:1px solid #eee; margin:6px 0; background:#fff; text-decoration:none; color:#0b57d0; }
+  .list a:hover { background:#f7fbff; border-color:#d8e8ff; }
+  input { width:100%; padding:10px 12px; border-radius:12px; border:1px solid #ddd; font-size:14px; }
+  .small { font-size: 13px; color:#444; }
+  .pill { display:inline-block; padding:3px 8px; border-radius:999px; border:1px solid #ddd; font-size:12px; background:#fafafa; margin-right:6px; }
+  code { background:#f2f2f2; padding:2px 6px; border-radius:8px; }
+
+
+
+
+
+
+
+
+
+/* === Alle Körperbereiche: exakt grün bei Hover (Form-exakt, kein Schein) === */
+.hotspot {
+  fill: rgba(0,0,0,0);
+  stroke: rgba(0,0,0,0);
+  vector-effect: non-scaling-stroke;
+  shape-rendering: geometricPrecision;
+  cursor: pointer;
+}
+
+/* Hover: JEDE Region wird exakt grün (Kopf + alle Gliedmaßen + alle Zonen) */
+.hotspot:hover {
+  fill: rgba(0, 180, 0, 0.75);
+  stroke: rgba(0,0,0,0);
+}
+
+/* Fixiert (Klick): dezentes Grün, damit man mehrere Bereiche markieren kann */
+.hotspot.locked {
+  fill: rgba(0, 160, 0, 0.35);
+  stroke: rgba(0,0,0,0);
+}
+
+
+/* === OP-Pflege Modus & Plattenzonen === */
+.platezone { fill: rgba(120, 0, 200, 0.18); stroke: rgba(120, 0, 200, 0.85); stroke-width: 3; stroke-dasharray: 8 6; pointer-events:none; }
+body.opmode .hotspot.spine { display:none; }
+body.opmode .hotspot.trunk { display:none; } /* Kopf/Hals/Thorax/Bauch/Becken optional via class */
+body.opmode .hotspot.joint, body.opmode .hotspot.bone { display:block; }
+body.hideplates .platezone { display:none; }
+
+
+/* === Fullscreen + Zoom + Touch === */
+#mapWrap { position: relative; }
+#mapToolbar { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 6px; }
+.toolbtn {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:10px 12px; border-radius:12px; border:1px solid #ddd;
+  background:#fff; cursor:pointer; font-size:14px;
+}
+.toolbtn:hover { background:#f5f5f5; }
+.badge { font-size:12px; padding:2px 8px; border:1px solid #eee; border-radius:999px; background:#fafafa; color:#333; }
+
+/* Fullscreen */
+#mapWrap:fullscreen { background:#fff; padding:12px; }
+#mapWrap:fullscreen svg { max-height: calc(100vh - 70px); }
+
+/* Prevent browser scroll while zooming inside SVG (esp. trackpad) */
+svg { touch-action: none; }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="card" style="padding:6px" style="flex:1">
+      <h1>OP-Pflege Skelett-Landkarte –  Standard</h1>
+      <div class="meta">
+        Hover = grün · Klick = Region-Checkliste (OP-Vorbereitung).<br/>
+        <span class="pill">herstellerneutral</span><span class="pill">Mac/Windows</span><span class="pill">printbar</span>
+        <span class="pill">editierbar via JSON</span>
+        <div style="margin-top:8px" class="small">
+          Inhalte pro Region liegen in <code>data/*.json</code> (z. B. <code>data/Knie-links.json</code>).
+        </div>
+      </div>
+    </div>
+    <div class="card" style="padding:6px">
+      <div class="small"><b>Schnellaktionen</b></div>
+      <button class="btn" onclick="window.print()">🖨️ Seite drucken</button>
+      <div class="small" style="margin-top:8px">Stand: 2025-12-21</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card" style="padding:6px" style="padding:8px">
+      <div class="small"><b>Landkarte</b></div>
+      <div style="margin-top:10px">
+        <div id="mapWrap">
+<div id="mapToolbar">
+  <button class="toolbtn" id="btnFs">⛶ Vollbild</button>
+  <button class="toolbtn" id="btnIn">＋ Zoom</button>
+  <button class="toolbtn" id="btnOut">－ Zoom</button>
+  <button class="toolbtn" id="btnReset">↺ Reset</button>
+  <button class="toolbtn" id="btnOsg">🦶 OSG Fokus</button>
+  <button class="toolbtn" id="btnBein">🦵 Bein Fokus</button>
+  <span class="badge" id="zoomBadge">100%</span>
+  <span class="small" style="margin-left:auto">Tipp: Mausrad/Trackpad = Zoom · Ziehen = Verschieben · Pinch = Zoom (Tablet) · Doppelklick/Doppeltipp = Zoom</span>
+</div>
+<svg viewBox="0 0 1024 1024" role="img" aria-label="Interaktives Skelett (Vorderansicht)">
+          <image href="skeleton.png" x="0" y="0" width="1024" height="1024" />
+          <g id="zoomLayer">
+<ellipse class="hotspot" tabindex="0" cx="512" cy="92" rx="78" ry="62" data-label="Schädel" data-link="SOP/Kopf/index.html" />
+<ellipse class="hotspot" tabindex="0" cx="512" cy="150" rx="62" ry="34" data-label="Unterkiefer" data-link="SOP/Kopf/index.html" />
+      <path class="hotspot trunk bone" tabindex="0" data-label="Hals" data-link="SOP/Hals/index.html" d="M485,195 C490,160 535,160 540,195 C545,230 540,250 512,255 C484,250 480,230 485,195 Z" />
+      <path class="hotspot trunk bone" tabindex="0" data-label="Thorax (Brustkorb)" data-link="SOP/Thorax/index.html" d="M400,240 C380,300 385,380 410,430 C445,500 580,500 615,430 C640,380 645,300 625,240 C585,205 440,205 400,240 Z" />
+      <path class="hotspot trunk bone" tabindex="0" data-label="Bauch (Abdomen)" data-link="SOP/Bauch/index.html" d="M430,455 C420,515 430,575 465,610 C495,640 530,640 560,615 C600,580 610,515 595,455 C560,440 470,440 430,455 Z" />
+      <path class="hotspot spine" tabindex="0" class="hotspot spine" data-label="HWS – Halswirbelsäule" data-link="SOP/HWS/index.html" d="M495,255 C500,245 525,245 530,255 C535,290 535,315 530,340 C525,350 500,350 495,340 C490,315 490,290 495,255 Z" />
+      <path class="hotspot spine" tabindex="0" class="hotspot spine" data-label="BWS – Brustwirbelsäule" data-link="SOP/BWS/index.html" d="M495,340 C500,330 525,330 530,340 C540,410 540,450 530,500 C525,510 500,510 495,500 C485,450 485,410 495,340 Z" />
+      <path class="hotspot spine" tabindex="0" class="hotspot spine" data-label="LWS – Lendenwirbelsäule" data-link="SOP/LWS/index.html" d="M495,500 C500,495 525,495 530,500 C540,560 540,600 530,640 C525,650 500,650 495,640 C485,600 485,560 495,500 Z" />
+      <ellipse class="hotspot" tabindex="0" cx="465" cy="620" rx="58" ry="62" data-label="Becken links (Os ilium)" data-link="SOP/Becken/index.html" />
+<ellipse class="hotspot" tabindex="0" cx="560" cy="620" rx="58" ry="62" data-label="Becken rechts (Os ilium)" data-link="SOP/Becken/index.html" />
+<ellipse class="hotspot" tabindex="0" cx="512" cy="640" rx="38" ry="54" data-label="Sakrum" data-link="SOP/Becken/index.html" />
+      <ellipse class="hotspot joint" tabindex="0" cx="470" cy="610" rx="48" ry="52" class="hotspot joint" data-label="Hüfte links" data-link="SOP/Huefte-links/index.html" />
+      <ellipse class="hotspot joint" tabindex="0" cx="560" cy="610" rx="48" ry="52" class="hotspot joint" data-label="Hüfte rechts" data-link="SOP/Huefte-rechts/index.html" />
+      <ellipse class="hotspot joint" tabindex="0" cx="385" cy="275" rx="45" ry="40" class="hotspot joint" data-label="Schulter links" data-link="SOP/Schulter-links/index.html" />
+      <path class="hotspot bone" tabindex="0" data-label="Oberarm links" data-link="SOP/Oberarm-links/index.html" d="M345,295 C315,330 300,370 300,410 C300,450 320,470 350,460 C385,445 400,380 395,330 C392,295 368,280 345,295 Z" />
+      <path class="hotspot bone" tabindex="0" data-label="Unterarm links" data-link="SOP/Unterarm-links/index.html" d="M300,415 C285,470 275,520 270,565 C266,600 285,615 310,605 C335,595 345,560 350,530 C358,485 370,450 365,420 C360,395 312,392 300,415 Z" />
+      <ellipse class="hotspot joint" tabindex="0" cx="285" cy="595" rx="40" ry="28" class="hotspot joint" data-label="Handgelenk links" data-link="SOP/Handgelenk-links/index.html" />
+      <ellipse class="hotspot bone" tabindex="0" cx="285" cy="630" rx="52" ry="34" data-label="Hand links (Mittelhand)" data-link="SOP/Hand-links/index.html" />
+      <ellipse class="hotspot bone" tabindex="0" cx="285" cy="672" rx="60" ry="28" data-label="Finger links" data-link="SOP/Finger-links/index.html" />
+      <ellipse class="hotspot joint" tabindex="0" cx="640" cy="275" rx="45" ry="40" class="hotspot joint" data-label="Schulter rechts" data-link="SOP/Schulter-rechts/index.html" />
+      <path class="hotspot bone" tabindex="0" data-label="Oberarm rechts" data-link="SOP/Oberarm-rechts/index.html" d="M680,295 C710,330 725,370 725,410 C725,450 705,470 675,460 C640,445 625,380 630,330 C633,295 657,280 680,295 Z" />
+      <path class="hotspot bone" tabindex="0" data-label="Unterarm rechts" data-link="SOP/Unterarm-rechts/index.html" d="M725,415 C740,470 750,520 755,565 C759,600 740,615 715,605 C690,595 680,560 675,530 C667,485 655,450 660,420 C665,395 713,392 725,415 Z" />
+      <ellipse class="hotspot joint" tabindex="0" cx="740" cy="595" rx="40" ry="28" class="hotspot joint" data-label="Handgelenk rechts" data-link="SOP/Handgelenk-rechts/index.html" />
+      <ellipse class="hotspot bone" tabindex="0" cx="740" cy="630" rx="52" ry="34" data-label="Hand rechts (Mittelhand)" data-link="SOP/Hand-rechts/index.html" />
+      <ellipse class="hotspot bone" tabindex="0" cx="740" cy="672" rx="60" ry="28" data-label="Finger rechts" data-link="SOP/Finger-rechts/index.html" />
+      <path class="hotspot bone" tabindex="0" data-label="Oberschenkel links" data-link="SOP/Oberschenkel-links/index.html" d="M435.0,660.0 C410.0,705.0 395.0,760.0 395.0,815.0 C395.0,855.0 410.0,875.0 435.0,870.0 C465.0,865.0 475.0,815.0 485.0,770.0 C495.0,725.0 505.0,695.0 495.0,665.0 C485.0,640.0 455.0,635.0 435.0,660.0 Z" />
+      <ellipse class="hotspot joint" tabindex="0" cx="475" cy="815.0" rx="40" ry="35" class="hotspot joint" data-label="Knie links" data-link="SOP/Knie-links/index.html" />
+      <path class="hotspot bone" tabindex="0" data-label="Unterschenkel links" data-link="SOP/Unterschenkel-links/index.html" d="M445,865 C430,915 420,955 425,995 C430,1015 460,1015 470,995 C485,960 495,915 505,875 C510,845 455,840 445,865 Z" />
+      <ellipse class="hotspot joint" tabindex="0" cx="465" cy="968.0" rx="45" ry="22" class="hotspot joint" data-label="Sprunggelenk links" data-link="SOP/Sprunggelenk-links/index.html" />
+      <ellipse class="hotspot bone" tabindex="0" cx="465" cy="1010" rx="58" ry="22" data-label="Fuß links (Mittelfuß)" data-link="SOP/Fuss-links/index.html" />
+      <ellipse class="hotspot bone" tabindex="0" cx="465" cy="1028" rx="62" ry="14" data-label="Zehen links" data-link="SOP/Zehen-links/index.html" />
+      <path class="hotspot bone" tabindex="0" data-label="Oberschenkel rechts" data-link="SOP/Oberschenkel-rechts/index.html" d="M550.0,660.0 C575.0,705.0 590.0,760.0 590.0,815.0 C590.0,855.0 575.0,875.0 550.0,870.0 C520.0,865.0 510.0,815.0 500.0,770.0 C490.0,725.0 480.0,695.0 490.0,665.0 C500.0,640.0 530.0,635.0 550.0,660.0 Z" />
+      <ellipse class="hotspot joint" tabindex="0" cx="550" cy="815.0" rx="40" ry="35" class="hotspot joint" data-label="Knie rechts" data-link="SOP/Knie-rechts/index.html" />
+      <path class="hotspot bone" tabindex="0" data-label="Unterschenkel rechts" data-link="SOP/Unterschenkel-rechts/index.html" d="M560,865 C575,915 585,955 580,995 C575,1015 545,1015 535,995 C520,960 510,915 500,875 C495,845 550,840 560,865 Z" />
+      <ellipse class="hotspot joint" tabindex="0" cx="550" cy="968.0" rx="45" ry="22" class="hotspot joint" data-label="Sprunggelenk rechts" data-link="SOP/Sprunggelenk-rechts/index.html" />
+      <ellipse class="hotspot bone" tabindex="0" cx="550" cy="1010" rx="58" ry="22" data-label="Fuß rechts (Mittelfuß)" data-link="SOP/Fuss-rechts/index.html" />
+      <ellipse class="hotspot bone" tabindex="0" cx="550" cy="1028" rx="62" ry="14" data-label="Zehen rechts" data-link="SOP/Zehen-rechts/index.html" />
+        
+<!-- Extra precise bones -->
+<ellipse class="hotspot bone" cx="460" cy="900" rx="20" ry="70" data-label="Tibia links"/>
+<ellipse class="hotspot bone" cx="495" cy="900" rx="16" ry="70" data-label="Fibula links"/>
+<ellipse class="hotspot bone" cx="530" cy="900" rx="20" ry="70" data-label="Tibia rechts"/>
+<ellipse class="hotspot bone" cx="565" cy="900" rx="16" ry="70" data-label="Fibula rechts"/>
+
+<ellipse class="hotspot bone" cx="320" cy="520" rx="16" ry="60" data-label="Radius links"/>
+<ellipse class="hotspot bone" cx="350" cy="520" rx="16" ry="60" data-label="Ulna links"/>
+<ellipse class="hotspot bone" cx="675" cy="520" rx="16" ry="60" data-label="Radius rechts"/>
+<ellipse class="hotspot bone" cx="705" cy="520" rx="16" ry="60" data-label="Ulna rechts"/>
+
+
+<!-- === OSG Split (Talus / Malleolen) === -->
+<ellipse class="hotspot joint" cx="450" cy="986" rx="16" ry="14" data-label="OSG links – Talus" data-link="SOP/OSG-links/index.html" />
+<ellipse class="hotspot joint" cx="435" cy="980" rx="12" ry="12" data-label="OSG links – Malleolus medialis" data-link="SOP/OSG-links/index.html" />
+<ellipse class="hotspot joint" cx="468" cy="980" rx="12" ry="12" data-label="OSG links – Malleolus lateralis" data-link="SOP/OSG-links/index.html" />
+
+<ellipse class="hotspot joint" cx="565" cy="986" rx="16" ry="14" data-label="OSG rechts – Talus" data-link="SOP/OSG-rechts/index.html" />
+<ellipse class="hotspot joint" cx="550" cy="980" rx="12" ry="12" data-label="OSG rechts – Malleolus medialis" data-link="SOP/OSG-rechts/index.html" />
+<ellipse class="hotspot joint" cx="583" cy="980" rx="12" ry="12" data-label="OSG rechts – Malleolus lateralis" data-link="SOP/OSG-rechts/index.html" />
+
+<!-- === Plattenzonen (typisch) === -->
+<path class="platezone" d="M438,920 C430,950 432,980 445,1002 C460,1018 478,1018 488,1002 C498,985 498,950 488,920 C472,910 452,910 438,920 Z" />
+<path class="platezone" d="M535,920 C527,950 529,980 542,1002 C557,1018 575,1018 585,1002 C595,985 595,950 585,920 C569,910 549,910 535,920 Z" />
+<!-- Radius distal (links/rechts) -->
+<path class="platezone" d="M302,540 C292,560 292,585 305,600 C318,612 336,610 344,596 C352,580 350,556 340,540 C328,532 312,532 302,540 Z" />
+<path class="platezone" d="M680,540 C670,560 670,585 683,600 C696,612 714,610 722,596 C730,580 728,556 718,540 C706,532 690,532 680,540 Z" />
+
+
+<!-- === OSG Advanced Split === -->
+<!-- Syndesmose -->
+<ellipse class="hotspot" cx="452" cy="968" rx="10" ry="18"
+ data-label="Syndesmose links" data-link="SOP/Syndesmose-links/index.html" />
+<ellipse class="hotspot" cx="572" cy="968" rx="10" ry="18"
+ data-label="Syndesmose rechts" data-link="SOP/Syndesmose-rechts/index.html" />
+
+<!-- Talus links -->
+<ellipse class="hotspot" cx="450" cy="992" rx="12" ry="10"
+ data-label="Talus links – Dom" data-link="SOP/Talus-links/index.html" />
+<ellipse class="hotspot" cx="450" cy="1006" rx="10" ry="12"
+ data-label="Talus links – Hals" data-link="SOP/Talus-links/index.html" />
+<ellipse class="hotspot" cx="450" cy="1020" rx="10" ry="8"
+ data-label="Talus links – Kopf" data-link="SOP/Talus-links/index.html" />
+
+<!-- Talus rechts -->
+<ellipse class="hotspot" cx="572" cy="992" rx="12" ry="10"
+ data-label="Talus rechts – Dom" data-link="SOP/Talus-rechts/index.html" />
+<ellipse class="hotspot" cx="572" cy="1006" rx="10" ry="12"
+ data-label="Talus rechts – Hals" data-link="SOP/Talus-rechts/index.html" />
+<ellipse class="hotspot" cx="572" cy="1020" rx="10" ry="8"
+ data-label="Talus rechts – Kopf" data-link="SOP/Talus-rechts/index.html" />
+
+<!-- Platten-/Schraubenzonen OSG -->
+<path class="hotspot" d="M430,950 C440,940 470,940 480,950 C470,960 440,960 430,950 Z"
+ data-label="Plattenzone OSG links (Fibula)" data-link="SOP/OSG-Platten-links/index.html" />
+<path class="hotspot" d="M550,950 C560,940 590,940 600,950 C590,960 560,960 550,950 Z"
+ data-label="Plattenzone OSG rechts (Fibula)" data-link="SOP/OSG-Platten-rechts/index.html" />
+
+
+</g>
+</svg>
+</div>
+      </div>
+      <div class="small" style="margin-top:10px">
+        Tipp: Region öffnen → dort steht oben, welche <code>data/…json</code> Datei dazu gehört.
+      </div>
+    </div>
+
+    <div class="card" style="padding:6px">
+      <div class="small"><b>Regionen-Liste</b></div>
+      <div style="margin:10px 0">
+        <input id="q" placeholder="Suchen (z. B. Knie, Unterarm, Sprunggelenk, HWS) …" oninput="filterList()" />
+      </div>
+      <div class="list" id="list"></div>
+      <div class="small" style="margin-top:10px">
+        Wenn du mir eure Siebe/Implantatsysteme als Liste gibst, kann ich die JSON-Dateien für dich direkt befüllen.
+<div class="card" style="padding:6px" style="margin-top:12px">
+  <div class="small"><b>OP-Pflege-Modus</b></div>
+  <div class="small" style="margin-top:8px">
+    <label style="display:flex; gap:10px; align-items:center; cursor:pointer;">
+      <input type="checkbox" id="opmode" />
+      <span>Nur <b>Knochen</b> (rot) & <b>Gelenke</b> (blau) anzeigen</span>
+    </label>
+  </div>
+  <div class="small" style="margin-top:8px">
+    <label style="display:flex; gap:10px; align-items:center; cursor:pointer;">
+      <input type="checkbox" id="plates" checked />
+      <span><b>Plattenzonen</b> anzeigen (gestrichelt)</span>
+    </label>
+  </div>
+  <div class="small" style="margin-top:10px">
+    Klick = fixieren/lösen · <b>Shift+Klick</b> = Checkliste öffnen (falls vorhanden)
+  </div>
+</div>
+
+      </div>
+    </div>
+  </div>
+
+<div class="card" style="padding:6px" style="margin-top:12px">
+  <div class="small"><b>Farblegende</b></div>
+  <div class="small" style="margin-top:6px">🔴 Knochen</div>
+  <div class="small">🔵 Gelenke</div>
+  <div class="small">🟠 Wirbelsäule</div>
+</div>
+
+</div>
+
+<div id="tooltip" class="tooltip" aria-hidden="true"></div>
+
+<script>
+  const tooltip = document.getElementById('tooltip');
+  function showTip(e, text) {
+    tooltip.textContent = text;
+    tooltip.classList.add('show');
+    tooltip.style.left = e.clientX + 'px';
+    tooltip.style.top  = e.clientY + 'px';
+  }
+  function hideTip() { tooltip.classList.remove('show'); }
+
+  const items = [{"label": "Kopf", "href": "SOP/Kopf/index.html"}, {"label": "Hals", "href": "SOP/Hals/index.html"}, {"label": "Thorax (Brustkorb)", "href": "SOP/Thorax/index.html"}, {"label": "Bauch (Abdomen)", "href": "SOP/Bauch/index.html"}, {"label": "HWS", "href": "SOP/HWS/index.html"}, {"label": "BWS", "href": "SOP/BWS/index.html"}, {"label": "LWS", "href": "SOP/LWS/index.html"}, {"label": "Becken", "href": "SOP/Becken/index.html"}, {"label": "Hüfte links", "href": "SOP/Huefte-links/index.html"}, {"label": "Hüfte rechts", "href": "SOP/Huefte-rechts/index.html"}, {"label": "Schulter links", "href": "SOP/Schulter-links/index.html"}, {"label": "Schulter rechts", "href": "SOP/Schulter-rechts/index.html"}, {"label": "Oberarm links", "href": "SOP/Oberarm-links/index.html"}, {"label": "Oberarm rechts", "href": "SOP/Oberarm-rechts/index.html"}, {"label": "Unterarm links", "href": "SOP/Unterarm-links/index.html"}, {"label": "Unterarm rechts", "href": "SOP/Unterarm-rechts/index.html"}, {"label": "Handgelenk links", "href": "SOP/Handgelenk-links/index.html"}, {"label": "Handgelenk rechts", "href": "SOP/Handgelenk-rechts/index.html"}, {"label": "Hand links", "href": "SOP/Hand-links/index.html"}, {"label": "Hand rechts", "href": "SOP/Hand-rechts/index.html"}, {"label": "Finger links", "href": "SOP/Finger-links/index.html"}, {"label": "Finger rechts", "href": "SOP/Finger-rechts/index.html"}, {"label": "Oberschenkel links", "href": "SOP/Oberschenkel-links/index.html"}, {"label": "Oberschenkel rechts", "href": "SOP/Oberschenkel-rechts/index.html"}, {"label": "Knie links", "href": "SOP/Knie-links/index.html"}, {"label": "Knie rechts", "href": "SOP/Knie-rechts/index.html"}, {"label": "Unterschenkel links", "href": "SOP/Unterschenkel-links/index.html"}, {"label": "Unterschenkel rechts", "href": "SOP/Unterschenkel-rechts/index.html"}, {"label": "Sprunggelenk links", "href": "SOP/Sprunggelenk-links/index.html"}, {"label": "Sprunggelenk rechts", "href": "SOP/Sprunggelenk-rechts/index.html"}, {"label": "Fuß links", "href": "SOP/Fuss-links/index.html"}, {"label": "Fuß rechts", "href": "SOP/Fuss-rechts/index.html"}, {"label": "Zehen links", "href": "SOP/Zehen-links/index.html"}, {"label": "Zehen rechts", "href": "SOP/Zehen-rechts/index.html"}];
+  const listEl = document.getElementById('list');
+  function render(list) {
+    listEl.innerHTML = list.map(i => `<a href="${i.href}">${i.label}</a>`).join('');
+  }
+  render(items);
+
+  function filterList() {
+    const q = document.getElementById('q').value.toLowerCase().trim();
+    if(!q) return render(items);
+    render(items.filter(i => i.label.toLowerCase().includes(q)));
+  }
+
+  document.querySelectorAll('.hotspot').forEach(el => {
+    const label = el.dataset.label || 'Bereich';
+    const link  = el.dataset.link || '';
+    el.addEventListener('mousemove', (e) => showTip(e, label));
+    el.addEventListener('mouseleave', hideTip);
+    el.addEventListener('focus', () => {
+      tooltip.textContent = label;
+      tooltip.classList.add('show');
+      tooltip.style.left = '24px';
+      tooltip.style.top  = '24px';
+    });
+    el.addEventListener('blur', hideTip);
+    el.addEventListener('click', () => { if (link) window.location.href = link; });
+    el.addEventListener('keydown', (ev) => {
+      if ((ev.key === 'Enter' || ev.key === ' ') && link) {
+        ev.preventDefault();
+        window.location.href = link;
+      }
+    });
+  });
+</script>
+
+<script>
+document.querySelectorAll('.hotspot').forEach(h => {
+  h.addEventListener('click', e => {
+    const link = h.dataset.link || '';
+    // Shift+Click opens the checklist page (if a link exists)
+    if (e.shiftKey && link) {
+      window.location.href = link;
+      return;
+    }
+    // Normal click toggles lock
+    e.stopPropagation();
+    h.classList.toggle('locked');
+  });
+});
+</script>
+
+
+<script>
+(function(){
+  const op = document.getElementById('opmode');
+  const pl = document.getElementById('plates');
+  const apply = () => {
+    document.body.classList.toggle('opmode', !!op && op.checked);
+    document.body.classList.toggle('hideplates', !!pl && !pl.checked);
+  };
+  if(op) op.addEventListener('change', apply);
+  if(pl) pl.addEventListener('change', apply);
+  apply();
+})();
+</script>
+
+
+<script>
+(function(){
+  const wrap = document.getElementById('mapWrap');
+  const svg = wrap ? wrap.querySelector('svg') : null;
+  const layer = document.getElementById('zoomLayer');
+  const badge = document.getElementById('zoomBadge');
+  const btnFs = document.getElementById('btnFs');
+  const btnIn = document.getElementById('btnIn');
+  const btnOut = document.getElementById('btnOut');
+  const btnReset = document.getElementById('btnReset');
+  const btnOsg = document.getElementById('btnOsg');
+  const btnBein = document.getElementById('btnBein');
+
+if (!svg || !layer) return;
+
+  let scale = 1;
+  let tx = 0, ty = 0;
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+  // Pan bounds (keep the map roughly in view)
+  const boundPan = () => {
+    // viewBox is 0..1024; keep translation within a sensible range
+    const lim = 700 / scale; // tighter when zoomed in
+    tx = clamp(tx, -lim, lim);
+    ty = clamp(ty, -lim, lim);
+  };
+
+  const apply = () => {
+    boundPan();
+    layer.setAttribute('transform', `translate(${tx} ${ty}) scale(${scale})`);
+    if (badge) badge.textContent = `${Math.round(scale*100)}%`;
+  };
+
+  const reset = () => { scale = 1; tx = 0; ty = 0; apply(); };
+
+  // Buttons
+  
+  const focusOn = (cx, cy, targetScale) => {
+    const old = scale;
+    scale = clamp(targetScale, 0.5, 6);
+    // center point (cx,cy) to middle of viewBox (512,512)
+    tx = (512 / scale) - cx;
+    ty = (512 / scale) - cy;
+    apply();
+  };
+
+  if (btnOsg) btnOsg.addEventListener('click', () => focusOn(512, 985, 3.2));
+  if (btnBein) btnBein.addEventListener('click', () => focusOn(512, 820, 2.2));
+
+if (btnIn) btnIn.addEventListener('click', () => { scale = clamp(scale*1.15, 0.5, 6); apply(); });
+  if (btnOut) btnOut.addEventListener('click', () => { scale = clamp(scale/1.15, 0.5, 6); apply(); });
+  if (btnReset) btnReset.addEventListener('click', reset);
+
+  // Fullscreen
+  const isFs = () => document.fullscreenElement === wrap;
+  if (btnFs) btnFs.addEventListener('click', async () => {
+    try {
+      if (!wrap) return;
+      if (!isFs()) await wrap.requestFullscreen();
+      else await document.exitFullscreen();
+    } catch(e) {}
+  });
+
+  // Wheel / Trackpad zoom: zoom around pointer
+  // Double click = zoom in (Shift = zoom out)
+  svg.addEventListener('dblclick', (e) => {
+    e.preventDefault();
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return;
+    const loc = pt.matrixTransform(ctm.inverse());
+    const old = scale;
+    const factor = e.shiftKey ? (1/1.6) : 1.6;
+    scale = clamp(scale * factor, 0.5, 6);
+    tx = loc.x - (loc.x - tx) * (scale/old);
+    ty = loc.y - (loc.y - ty) * (scale/old);
+    apply();
+  });
+
+  
+  svg.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return;
+    const inv = ctm.inverse();
+    const loc = pt.matrixTransform(inv); // SVG coords
+
+    const old = scale;
+    const delta = e.deltaY;
+    const factor = delta > 0 ? (1/1.12) : 1.12;
+    scale = clamp(scale*factor, 0.5, 6);
+
+    // Adjust translate to keep pointer location stable
+    // newTx = loc.x - (loc.x - tx) * (scale/old)
+    tx = loc.x - (loc.x - tx) * (scale/old);
+    ty = loc.y - (loc.y - ty) * (scale/old);
+    apply();
+  }, { passive:false });
+
+  // Drag/pan with mouse
+  let dragging = false;
+  let lastX = 0, lastY = 0;
+
+  svg.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    dragging = true;
+    lastX = e.clientX; lastY = e.clientY;
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    lastX = e.clientX; lastY = e.clientY;
+
+    // convert screen delta to SVG delta using current scale
+    tx += dx / scale;
+    ty += dy / scale;
+    apply();
+  });
+  window.addEventListener('mouseup', () => dragging = false);
+
+  // Touch: pan + pinch zoom
+  let touchMode = null;
+  let startDist = 0, startScale = 1;
+  let startMid = null;
+  let startTx = 0, startTy = 0;
+
+  const dist = (a,b) => Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+  const mid = (a,b) => ({ x:(a.clientX+b.clientX)/2, y:(a.clientY+b.clientY)/2 });
+
+  svg.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      touchMode = 'pan';
+      lastX = e.touches[0].clientX;
+      lastY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+      touchMode = 'pinch';
+      startDist = dist(e.touches[0], e.touches[1]);
+      startScale = scale;
+      startTx = tx; startTy = ty;
+      startMid = mid(e.touches[0], e.touches[1]);
+    }
+  }, {passive:false});
+
+  svg.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (touchMode === 'pan' && e.touches.length === 1) {
+      const dx = e.touches[0].clientX - lastX;
+      const dy = e.touches[0].clientY - lastY;
+      lastX = e.touches[0].clientX;
+      lastY = e.touches[0].clientY;
+      tx += dx / scale;
+      ty += dy / scale;
+      apply();
+    } else if (touchMode === 'pinch' && e.touches.length === 2) {
+      const newDist = dist(e.touches[0], e.touches[1]);
+      const factor = newDist / startDist;
+      scale = clamp(startScale * factor, 0.5, 6);
+
+      // zoom around pinch midpoint
+      const m = mid(e.touches[0], e.touches[1]);
+      const pt = svg.createSVGPoint();
+      pt.x = m.x; pt.y = m.y;
+      const ctm = svg.getScreenCTM();
+      if (!ctm) return;
+      const loc = pt.matrixTransform(ctm.inverse());
+
+      tx = loc.x - (loc.x - startTx) * (scale/startScale);
+      ty = loc.y - (loc.y - startTy) * (scale/startScale);
+      apply();
+    }
+  }, {passive:false});
+
+  
+  // Double tap (touch) = zoom in (two-finger tap not required)
+  let lastTapTime = 0;
+  svg.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (e.changedTouches && e.changedTouches.length === 1) {
+      const dt = now - lastTapTime;
+      if (dt > 0 && dt < 320) {
+        const t = e.changedTouches[0];
+        const pt = svg.createSVGPoint();
+        pt.x = t.clientX; pt.y = t.clientY;
+        const ctm = svg.getScreenCTM();
+        if (ctm) {
+          const loc = pt.matrixTransform(ctm.inverse());
+          const old = scale;
+          scale = clamp(scale * 1.6, 0.5, 6);
+          tx = loc.x - (loc.x - tx) * (scale/old);
+          ty = loc.y - (loc.y - ty) * (scale/old);
+          apply();
+        }
+      }
+      lastTapTime = now;
+    }
+    // existing touchend logic continues below
+  }, {passive:false});
+
+  svg.addEventListener('touchend', (e) => {
+    if (e.touches.length === 0) touchMode = null;
+    if (e.touches.length === 1) {
+      touchMode = 'pan';
+      lastX = e.touches[0].clientX;
+      lastY = e.touches[0].clientY;
+    }
+  });
+
+  // Init
+  apply();
+})();
+</script>
+
+</body>
+</html>

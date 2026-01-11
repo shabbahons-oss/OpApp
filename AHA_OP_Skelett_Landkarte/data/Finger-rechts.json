@@ -1,0 +1,81 @@
+{
+  "region_label": "Finger rechts",
+  "sop_id": "",
+  "version": "0.1",
+  "approved_by": "",
+  "valid_from": "",
+  "review_due": "",
+  "common_procedures": [
+    {
+      "name": "",
+      "notes": ""
+    },
+    {
+      "name": "",
+      "notes": ""
+    }
+  ],
+  "sets_sieves": [
+    {
+      "name": "Grundsieb",
+      "notes": "",
+      "required": true
+    },
+    {
+      "name": "Spezialset",
+      "notes": "",
+      "required": false
+    },
+    {
+      "name": "Implantatsystem-Set",
+      "notes": "",
+      "required": false
+    }
+  ],
+  "implants_systems": [
+    {
+      "system": "",
+      "components": "Platten/Schrauben …",
+      "sizes": "",
+      "backup": "",
+      "sap_refs": ""
+    }
+  ],
+  "positioning": [
+    {
+      "item": "",
+      "notes": ""
+    }
+  ],
+  "imaging": [
+    {
+      "item": "",
+      "notes": ""
+    }
+  ],
+  "consumables": [
+    {
+      "item": "Verbandmaterial",
+      "notes": ""
+    },
+    {
+      "item": "Drainage",
+      "notes": ""
+    }
+  ],
+  "documentation": [
+    {
+      "item": "Zählkontrolle Start",
+      "notes": ""
+    },
+    {
+      "item": "Zählkontrolle Ende",
+      "notes": ""
+    },
+    {
+      "item": "Implantatetiketten/UDI/Charge",
+      "notes": ""
+    }
+  ],
+  "remarks": ""
+}

@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Kopf – OP-Pflege ()</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 18px; background:#fafafa; color:#1a1a1a; }
+  .top { display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  a { color:#0b57d0; text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  .card { background:#fff; border:1px solid #e6e6e6; border-radius:14px; padding:14px; margin:12px 0; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  h2 { font-size: 16px; margin: 0 0 10px; }
+  .meta { font-size: 13px; color:#444; }
+  table { width:100%; border-collapse:collapse; font-size: 14px; }
+  th, td { border-bottom:1px solid #eee; padding:8px; text-align:left; vertical-align:top; }
+  th { background:#fafafa; }
+  .pill { display:inline-block; padding:3px 8px; border-radius:999px; border:1px solid #ddd; font-size:12px; background:#fafafa; margin-right:6px; }
+  .warn { background:#fff7e6; border:1px solid #ffe0a3; }
+  .small { font-size: 13px; color:#444; }
+  ul { margin: 8px 0 0 18px; }
+  code { background:#f2f2f2; padding:2px 6px; border-radius:8px; }
+  @media print {
+    a { display:none; }
+    .card { break-inside: avoid; }
+    body { background:#fff; }
+  }
+
+/* === Enhanced Precision & Color Coding === */
+.hotspot { fill: rgba(0,0,0,0); stroke-width: 4; cursor:pointer; }
+.hotspot.bone:hover { fill: rgba(220,0,0,0.55); stroke: rgba(180,0,0,0.95); }
+.hotspot.joint:hover { fill: rgba(0,80,220,0.55); stroke: rgba(0,60,180,0.95); }
+.hotspot.spine:hover { fill: rgba(255,140,0,0.55); stroke: rgba(220,120,0,0.95); }
+
+.hotspot.locked.bone { fill: rgba(220,0,0,0.65); stroke: rgba(180,0,0,1); }
+.hotspot.locked.joint { fill: rgba(0,80,220,0.65); stroke: rgba(0,60,180,1); }
+.hotspot.locked.spine { fill: rgba(255,140,0,0.65); stroke: rgba(220,120,0,1); }
+
+</style>
+</head>
+<body>
+  <div class="top">
+    <div>
+      <h1 id="h1">Kopf</h1>
+      <div class="meta">
+        <span class="pill">OP-Pflege Vorbereitung</span>
+        <span class="pill"> Standard</span>
+        <span class="pill">printbar</span>
+        <span id="meta2"></span>
+      </div>
+    </div>
+    <div>
+      <a href="../../index.html">← Zurück</a> &nbsp;|&nbsp;
+      <a href="#" onclick="window.print();return false;">🖨️ Drucken</a>
+    </div>
+  </div>
+
+  <div class="card warn">
+    <span class="pill">Hinweis</span>
+    <span class="small">Diese Seite zieht Inhalte aus <code>data/Kopf.json</code>. Datei mit einem Texteditor bearbeiten (z. B. Notepad/VS Code).</span>
+  </div>
+
+  <div class="card">
+    <h2>0) SOP-Header</h2>
+    <table>
+      <tbody>
+        <tr><td>SOP-ID</td><td id="sop_id"></td><td>Version</td><td id="version"></td></tr>
+        <tr><td>Freigabe</td><td id="approved_by"></td><td>Gültig ab</td><td id="valid_from"></td></tr>
+        <tr><td>Nächste Prüfung</td><td id="review_due"></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>1) Häufige Eingriffe (Hausstandard)</h2>
+    <ul id="procedures"></ul>
+  </div>
+
+  <div class="card">
+    <h2>2) Sets & Siebe (OP-Vorbereitung)</h2>
+    <table>
+      <thead><tr><th>Set/Sieb</th><th>Notiz</th><th>Pflicht</th></tr></thead>
+      <tbody id="sets"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>3) Implantatsysteme (Platten/Schrauben) – OP-Pflege Handling</h2>
+    <table>
+      <thead><tr><th>System</th><th>Komponenten</th><th>Größen</th><th>Ersatz/Backup</th><th>SAP/Artikel</th></tr></thead>
+      <tbody id="implants"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>4) Lagerung & Patientensicherheit</h2>
+    <ul id="positioning"></ul>
+  </div>
+
+  <div class="card">
+    <h2>5) Bildgebung / Technik</h2>
+    <ul id="imaging"></ul>
+  </div>
+
+  <div class="card">
+    <h2>6) Verbrauchsmaterial</h2>
+    <ul id="consumables"></ul>
+  </div>
+
+  <div class="card">
+    <h2>7) Dokumentation / Sicherheitsanker</h2>
+    <ul id="documentation"></ul>
+  </div>
+
+  <div class="card">
+    <h2>8) Freitext / Hinweise</h2>
+    <div id="remarks" class="small"></div>
+  </div>
+
+<script>
+async function load() {
+  const res = await fetch("../../data/Kopf.json");
+  const d = await res.json();
+
+  const setText = (id, val) => document.getElementById(id).textContent = (val || "—");
+  setText("sop_id", d.sop_id);
+  setText("version", d.version);
+  setText("approved_by", d.approved_by);
+  setText("valid_from", d.valid_from);
+  setText("review_due", d.review_due);
+
+  // procedures
+  const ulP = document.getElementById("procedures");
+  ulP.innerHTML = "";
+  (d.common_procedures || []).forEach(p => {
+    if(!p.name) return;
+    const li = document.createElement("li");
+    li.textContent = p.notes ? `${p.name} – ${p.notes}` : p.name;
+    ulP.appendChild(li);
+  });
+  if(!ulP.children.length) ulP.innerHTML = "<li>—</li>";
+
+  // sets
+  const tbS = document.getElementById("sets");
+  tbS.innerHTML = "";
+  (d.sets_sieves || []).forEach(s => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${s.name||"—"}</td><td>${s.notes||""}</td><td>${s.required ? "Ja" : "Optional"}</td>`;
+    tbS.appendChild(tr);
+  });
+  if(!tbS.children.length) tbS.innerHTML = "<tr><td>—</td><td></td><td></td></tr>";
+
+  // implants
+  const tbI = document.getElementById("implants");
+  tbI.innerHTML = "";
+  (d.implants_systems || []).forEach(i => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${i.system||"—"}</td><td>${i.components||""}</td><td>${i.sizes||""}</td><td>${i.backup||""}</td><td>${i.sap_refs||""}</td>`;
+    tbI.appendChild(tr);
+  });
+  if(!tbI.children.length) tbI.innerHTML = "<tr><td>—</td><td></td><td></td><td></td><td></td></tr>";
+
+  const fillList = (id, arr) => {
+    const ul = document.getElementById(id);
+    ul.innerHTML = "";
+    (arr || []).forEach(x => {
+      if(!x.item) return;
+      const li = document.createElement("li");
+      li.textContent = x.notes ? `${x.item} – ${x.notes}` : x.item;
+      ul.appendChild(li);
+    });
+    if(!ul.children.length) ul.innerHTML = "<li>—</li>";
+  };
+
+  fillList("positioning", d.positioning);
+  fillList("imaging", d.imaging);
+  fillList("consumables", d.consumables);
+  fillList("documentation", d.documentation);
+
+  document.getElementById("remarks").textContent = d.remarks || "—";
+}
+load();
+</script>
+
+<script>
+document.querySelectorAll('.hotspot').forEach(h => {
+  h.addEventListener('click', e => {
+    e.stopPropagation();
+    h.classList.toggle('locked');
+  });
+});
+</script>
+
+</body>
+</html>

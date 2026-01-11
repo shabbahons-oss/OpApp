@@ -1,0 +1,210 @@
+{
+  "facility": " (Template)",
+  "created": "2025-12-21",
+  "regions": [
+    {
+      "key": "Kopf",
+      "label": "Kopf",
+      "data_file": "data/Kopf.json",
+      "page": "SOP/Kopf/index.html"
+    },
+    {
+      "key": "Hals",
+      "label": "Hals",
+      "data_file": "data/Hals.json",
+      "page": "SOP/Hals/index.html"
+    },
+    {
+      "key": "Thorax",
+      "label": "Thorax (Brustkorb)",
+      "data_file": "data/Thorax.json",
+      "page": "SOP/Thorax/index.html"
+    },
+    {
+      "key": "Bauch",
+      "label": "Bauch (Abdomen)",
+      "data_file": "data/Bauch.json",
+      "page": "SOP/Bauch/index.html"
+    },
+    {
+      "key": "HWS",
+      "label": "HWS",
+      "data_file": "data/HWS.json",
+      "page": "SOP/HWS/index.html"
+    },
+    {
+      "key": "BWS",
+      "label": "BWS",
+      "data_file": "data/BWS.json",
+      "page": "SOP/BWS/index.html"
+    },
+    {
+      "key": "LWS",
+      "label": "LWS",
+      "data_file": "data/LWS.json",
+      "page": "SOP/LWS/index.html"
+    },
+    {
+      "key": "Becken",
+      "label": "Becken",
+      "data_file": "data/Becken.json",
+      "page": "SOP/Becken/index.html"
+    },
+    {
+      "key": "Huefte-links",
+      "label": "Hüfte links",
+      "data_file": "data/Huefte-links.json",
+      "page": "SOP/Huefte-links/index.html"
+    },
+    {
+      "key": "Huefte-rechts",
+      "label": "Hüfte rechts",
+      "data_file": "data/Huefte-rechts.json",
+      "page": "SOP/Huefte-rechts/index.html"
+    },
+    {
+      "key": "Schulter-links",
+      "label": "Schulter links",
+      "data_file": "data/Schulter-links.json",
+      "page": "SOP/Schulter-links/index.html"
+    },
+    {
+      "key": "Schulter-rechts",
+      "label": "Schulter rechts",
+      "data_file": "data/Schulter-rechts.json",
+      "page": "SOP/Schulter-rechts/index.html"
+    },
+    {
+      "key": "Oberarm-links",
+      "label": "Oberarm links",
+      "data_file": "data/Oberarm-links.json",
+      "page": "SOP/Oberarm-links/index.html"
+    },
+    {
+      "key": "Oberarm-rechts",
+      "label": "Oberarm rechts",
+      "data_file": "data/Oberarm-rechts.json",
+      "page": "SOP/Oberarm-rechts/index.html"
+    },
+    {
+      "key": "Unterarm-links",
+      "label": "Unterarm links",
+      "data_file": "data/Unterarm-links.json",
+      "page": "SOP/Unterarm-links/index.html"
+    },
+    {
+      "key": "Unterarm-rechts",
+      "label": "Unterarm rechts",
+      "data_file": "data/Unterarm-rechts.json",
+      "page": "SOP/Unterarm-rechts/index.html"
+    },
+    {
+      "key": "Handgelenk-links",
+      "label": "Handgelenk links",
+      "data_file": "data/Handgelenk-links.json",
+      "page": "SOP/Handgelenk-links/index.html"
+    },
+    {
+      "key": "Handgelenk-rechts",
+      "label": "Handgelenk rechts",
+      "data_file": "data/Handgelenk-rechts.json",
+      "page": "SOP/Handgelenk-rechts/index.html"
+    },
+    {
+      "key": "Hand-links",
+      "label": "Hand links",
+      "data_file": "data/Hand-links.json",
+      "page": "SOP/Hand-links/index.html"
+    },
+    {
+      "key": "Hand-rechts",
+      "label": "Hand rechts",
+      "data_file": "data/Hand-rechts.json",
+      "page": "SOP/Hand-rechts/index.html"
+    },
+    {
+      "key": "Finger-links",
+      "label": "Finger links",
+      "data_file": "data/Finger-links.json",
+      "page": "SOP/Finger-links/index.html"
+    },
+    {
+      "key": "Finger-rechts",
+      "label": "Finger rechts",
+      "data_file": "data/Finger-rechts.json",
+      "page": "SOP/Finger-rechts/index.html"
+    },
+    {
+      "key": "Oberschenkel-links",
+      "label": "Oberschenkel links",
+      "data_file": "data/Oberschenkel-links.json",
+      "page": "SOP/Oberschenkel-links/index.html"
+    },
+    {
+      "key": "Oberschenkel-rechts",
+      "label": "Oberschenkel rechts",
+      "data_file": "data/Oberschenkel-rechts.json",
+      "page": "SOP/Oberschenkel-rechts/index.html"
+    },
+    {
+      "key": "Knie-links",
+      "label": "Knie links",
+      "data_file": "data/Knie-links.json",
+      "page": "SOP/Knie-links/index.html"
+    },
+    {
+      "key": "Knie-rechts",
+      "label": "Knie rechts",
+      "data_file": "data/Knie-rechts.json",
+      "page": "SOP/Knie-rechts/index.html"
+    },
+    {
+      "key": "Unterschenkel-links",
+      "label": "Unterschenkel links",
+      "data_file": "data/Unterschenkel-links.json",
+      "page": "SOP/Unterschenkel-links/index.html"
+    },
+    {
+      "key": "Unterschenkel-rechts",
+      "label": "Unterschenkel rechts",
+      "data_file": "data/Unterschenkel-rechts.json",
+      "page": "SOP/Unterschenkel-rechts/index.html"
+    },
+    {
+      "key": "Sprunggelenk-links",
+      "label": "Sprunggelenk links",
+      "data_file": "data/Sprunggelenk-links.json",
+      "page": "SOP/Sprunggelenk-links/index.html"
+    },
+    {
+      "key": "Sprunggelenk-rechts",
+      "label": "Sprunggelenk rechts",
+      "data_file": "data/Sprunggelenk-rechts.json",
+      "page": "SOP/Sprunggelenk-rechts/index.html"
+    },
+    {
+      "key": "Fuss-links",
+      "label": "Fuß links",
+      "data_file": "data/Fuss-links.json",
+      "page": "SOP/Fuss-links/index.html"
+    },
+    {
+      "key": "Fuss-rechts",
+      "label": "Fuß rechts",
+      "data_file": "data/Fuss-rechts.json",
+      "page": "SOP/Fuss-rechts/index.html"
+    },
+    {
+      "key": "Zehen-links",
+      "label": "Zehen links",
+      "data_file": "data/Zehen-links.json",
+      "page": "SOP/Zehen-links/index.html"
+    },
+    {
+      "key": "Zehen-rechts",
+      "label": "Zehen rechts",
+      "data_file": "data/Zehen-rechts.json",
+      "page": "SOP/Zehen-rechts/index.html"
+    }
+  ]
+}
